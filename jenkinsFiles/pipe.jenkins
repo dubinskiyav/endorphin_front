@@ -1,0 +1,80 @@
+#!groovy
+properties([disableConcurrentBuilds()])
+
+access_token = "HXyc47C2GtjnsjUtue76HbWwTuVmm_KUhoBR_a7xBxI"
+String branchName = "main-ts"
+String dirName = "gelicon.core"
+String dirOutput = "html"
+
+String targetName = "dev frontend"
+
+def join(list) {
+    def s = "";
+    for(v in list) {
+        s+=".";
+        s+=v;
+    }
+    return s.substring(1);
+}
+
+
+node {
+    try {
+        stage ("Подготовка") {
+            try {
+
+                def response = sh returnStdout: true, script: "curl https://botapi.tamtam.chat/chats?access_token=$access_token"
+                def responseJson = readJSON text: response
+                chats = responseJson.chats;
+
+            } catch(e) {
+                println("ERROR: $e")
+                currentBuild.result = "ERROR: $e"
+                return
+            }
+            dir ("/home/build") {
+                if (!fileExists(dirName)) {
+                    println("ERROR: No directory '$dirName'")
+                    currentBuild.result = "ERROR: No directory '$dirName'"
+                    sendMessage("Cancel build $targetName '($branchName)' Directory not found")
+                    return
+                };
+                sendMessage("Build $targetName '($branchName)' start")                
+            }
+        }
+        if (currentBuild.result == "SUCCESS") {
+            return
+        }
+        stage("Обновление каталога") {
+            dir ("/home/build/$dirName/frontend") {
+                sh "sudo git fetch --all"
+                sh "sudo  git reset --hard origin/$branchName"
+                // cut чтобы убрать hash комита
+                version = sh returnStdout: true, script: "git describe --tags | cut -d '-' -f 1,2"
+                // в версиии есть перенос каретки и это приводит к ошибке отправки сообшения в там там
+                def arr = version.findAll( /\d+/ )
+                version = join(arr)
+            }
+        }
+        stage("Сборка") {
+            dir ("/home/build/$dirName/frontend") {
+                sh "export NODE_OPTIONS=--max_old_space_size=4096"
+                sh "CI='' sudo REACT_APP_VERSION=$version npm run build"
+            }
+        }
+        stage("Деплой") {
+            sh "rm -r /var/www/$dirOutput"
+            sh "cp -r /home/build/$dirName/frontend/build /var/www/$dirOutput"
+            sendMessage("Build $targetName '($branchName)' success. V $version")
+        }
+    } catch(e) {
+        sendMessage("Build $targetName '($branchName)' fault!")
+        throw e
+    }
+}
+
+def sendMessage(m) {
+    for(chat in chats) {
+        sh "sudo curl -H \"Content-Type: application/json\" --data \"{\\\"text\\\":\\\"$m\\\"}\" \"https://botapi.tamtam.chat/messages?access_token=$access_token&chat_id=$chat.chat_id\""
+    }
+}

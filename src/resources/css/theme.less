@@ -1,0 +1,65 @@
+@import '~antd/dist/antd.less';
+
+@primary-color:#cda10a;
+@primary-color-light:#F4CB55;
+@success-color:#52c41a;
+@link-color:#cda10a;
+@switch-color:#cda10a;
+@layout-header-background:#4b6f87;
+@layout-sider-background:@layout-header-background;
+@disabled-color: rgba(0, 0, 0, 0.5);
+
+.main-menu {
+    background-color: @layout-header-background;
+    color:#fff;
+}
+
+.main-menu .ant-menu-item-selected a {
+    color:@primary-color-light !important;
+}
+
+.main-menu .ant-menu-item a {
+    color:#fff;
+}
+
+.main-menu .ant-menu-item-selected {
+    background-color: @layout-header-background !important;
+}
+
+.main-menu .ant-menu-sub.ant-menu-inline {
+    background-color: @layout-header-background;
+    color:#fff;
+}
+
+.site-layout-workspace {
+    background: #fff;
+  }
+  
+.ant-table-tbody tr.ant-table-row:hover td {
+    background:@primary-color-light !important;
+}
+
+.ant-collapse-extra:hover {
+    color:@primary-color;
+}
+  
+.ant-modal-confirm-content {
+    margin-left: 0px !important;
+}
+
+.ant-table-cell .ant-spin-container {
+    background-color: transparent !important;
+}
+
+.ant-form-item-explain-error {
+    color:  @error-color;
+}
+
+.ant-form-item-label > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+    display: contents;
+    content: '* ';
+}
+
+.ant-menu-vertical {
+    border-right:0
+}
